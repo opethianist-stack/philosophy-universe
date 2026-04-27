@@ -31,15 +31,17 @@ canvas:active{cursor:grabbing;}
 #filter-panel label{display:flex;align-items:center;gap:5px;font-size:10px;color:rgba(255,255,255,0.55);cursor:pointer;margin-bottom:5px;}
 #filter-panel input{width:11px;height:11px;cursor:pointer;accent-color:#7F77DD;}
 #filter-panel i{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0;}
-#wormhole-panel{position:absolute;top:82px;left:12px;background:rgba(6,6,18,0.97);border:0.5px solid rgba(255,200,50,0.25);border-radius:8px;padding:10px 12px;z-index:15;display:none;min-width:230px;}
-#wormhole-panel h4{font-size:10px;color:rgba(255,200,50,0.6);margin-bottom:8px;letter-spacing:1px;}
-#wormhole-panel label{display:flex;align-items:center;gap:5px;font-size:10px;color:rgba(255,255,255,0.5);cursor:pointer;margin-bottom:5px;}
-#wormhole-panel input{width:11px;height:11px;cursor:pointer;accent-color:#FFD700;}
+#fx-panel{position:absolute;top:82px;left:12px;background:rgba(6,6,18,0.97);border:0.5px solid rgba(120,115,200,0.2);border-radius:8px;padding:10px 14px;z-index:15;display:none;min-width:220px;}
+#fx-panel h4{font-size:10px;color:rgba(255,255,255,0.35);margin-bottom:10px;letter-spacing:1px;}
+#fx-panel label{display:flex;align-items:center;gap:6px;font-size:10px;color:rgba(255,255,255,0.55);cursor:pointer;margin-bottom:8px;}
+#fx-panel input{cursor:pointer;accent-color:#7F77DD;}
+.fx-desc{font-size:9px;color:rgba(255,255,255,0.25);margin-left:18px;margin-top:-5px;margin-bottom:8px;line-height:1.5;}
 #legend{position:absolute;bottom:14px;left:12px;display:flex;flex-wrap:wrap;gap:5px;max-width:480px;z-index:10;}
 #legend span{font-size:9px;color:rgba(255,255,255,0.32);display:flex;align-items:center;gap:3px;}
 #legend i{width:7px;height:7px;border-radius:50%;flex-shrink:0;display:inline-block;}
 #wh-leg{font-size:9px;color:rgba(255,200,50,0.45);display:flex;align-items:center;gap:4px;margin-top:2px;width:100%;}
 #wh-leg span{width:22px;height:1.5px;background:linear-gradient(90deg,#FFD700,#FFA500);display:inline-block;border-radius:1px;}
+#comet-leg{font-size:9px;color:rgba(180,200,255,0.4);display:flex;align-items:center;gap:4px;margin-top:2px;width:100%;}
 #rel-legend{position:absolute;bottom:14px;right:12px;z-index:10;}
 #rel-legend div{font-size:9px;color:rgba(255,255,255,0.28);display:flex;align-items:center;gap:4px;margin-bottom:3px;}
 #rel-legend .rl{width:18px;height:1.5px;display:inline-block;}
@@ -78,7 +80,7 @@ canvas:active{cursor:grabbing;}
   </div>
   <div id="panels">
     <button class="panel-btn" onclick="togglePanel('filter-panel')">≡ 사조 필터</button>
-    <button class="panel-btn" style="color:rgba(255,200,50,0.7);border-color:rgba(255,200,50,0.3);" onclick="togglePanel('wormhole-panel')">⟳ 웜홀</button>
+    <button class="panel-btn" style="color:rgba(180,220,255,0.7);border-color:rgba(180,220,255,0.25);" onclick="togglePanel('fx-panel')">✦ 효과</button>
   </div>
   <div id="filter-panel">
     <h4>사조 선택</h4>
@@ -107,12 +109,14 @@ canvas:active{cursor:grabbing;}
     <label><input type="checkbox" checked data-trad="sociology"><i style="background:#B4B2A9"></i>사회학·지식사회학</label>
     <label><input type="checkbox" checked data-trad="east-asian"><i style="background:#5F5E5A"></i>동아시아 현대철학</label>
   </div>
-  <div id="wormhole-panel">
-    <h4>⟳ 웜홀 — 시대를 넘는 사상적 연결</h4>
-    <label><input type="checkbox" checked id="wh-toggle"> 웜홀 표시</label>
-    <div style="margin-top:8px;font-size:10px;color:rgba(255,255,255,0.28);line-height:1.7;">
-      황금빛 점선은 시간적으로 멀지만<br>사상적으로 강하게 연결된 철학자들이에요.<br>선 위에 마우스를 올리면 설명이 나와요.<br>웜홀 노드 주변엔 황금빛 링이 표시돼요.
-    </div>
+  <div id="fx-panel">
+    <h4>✦ 시각 효과</h4>
+    <label><input type="checkbox" checked id="neb-toggle"> 🌌 성운 (Nebula)</label>
+    <p class="fx-desc">같은 사조 철학자들 주변에<br>반투명 가스 구름을 표시해요.<br>별들이 성운에서 태어나듯,<br>사상도 전통 안에서 탄생해요.</p>
+    <label><input type="checkbox" checked id="wh-toggle"> ⟳ 웜홀 (Wormhole)</label>
+    <p class="fx-desc">시대는 멀지만 사상적으로<br>강하게 연결된 철학자를<br>황금빛 점선으로 표시해요.<br>선 위에 마우스를 올리면 설명이 나와요.</p>
+    <label style="color:rgba(180,200,255,0.6);">☄️ 혜성 (Comet)</label>
+    <p class="fx-desc">서양 주류 밖에서 진입한<br>동아시아·탈식민 철학자들에게<br>꼬리 효과가 표시돼요.<br>(항상 켜짐)</p>
   </div>
   <div id="hint">드래그 이동 · 휠 줌<br>노드·웜홀 클릭 → 상세</div>
   <div id="legend">
@@ -141,6 +145,7 @@ canvas:active{cursor:grabbing;}
     <span><i style="background:#B4B2A9"></i>사회학·지식사회학</span>
     <span><i style="background:#5F5E5A"></i>동아시아 현대철학</span>
     <div id="wh-leg"><span></span>웜홀 — 시대를 넘는 사상적 연결 (10개)</div>
+    <div id="comet-leg">☄️ 혜성 — 서양 주류 밖 진입 철학자 (동아시아·탈식민)</div>
   </div>
   <div id="rel-legend">
     <div><span class="rl" style="background:#7F77DD"></span>계승</div>
@@ -178,6 +183,9 @@ const TRAD_KO = {
   'sociology':'사회학·지식사회학','east-asian':'동아시아 현대철학',
 };
 
+// 혜성 철학자: 서양 주류 밖에서 진입한 사상가들
+const COMET_IDS = new Set(['karatani','azuma','han','fanon','said','mbembe','chakrabarty','dewey','bhaskar']);
+
 const canvas = document.getElementById('cv');
 const ctx = canvas.getContext('2d');
 const app = document.getElementById('app');
@@ -191,11 +199,13 @@ window.addEventListener('resize', resize);
 
 const PH = {};
 RAW.n.forEach(n => {
-  PH[n[0]] = {id:n[0], name:n[1], life:n[2], x:n[3], y:n[4],
+  PH[n[0]] = {
+    id:n[0], name:n[1], life:n[2], x:n[3], y:n[4],
     r:n[5], color:n[6], summary:n[7], q:n[8],
     themes:n[9].split('|').filter(Boolean),
     works:n[10].split('|').filter(Boolean),
-    inf:n[11], beg:n[12], trad:n[13], visible:true};
+    inf:n[11], beg:n[12], trad:n[13], visible:true
+  };
 });
 
 const LINKS = RAW.l.map(l => ({s:l[0],t:l[1],type:l[2],str:l[3],color:l[4],desc:l[5]}));
@@ -205,7 +215,7 @@ const CW = RAW.w;
 let ox=0, oy=50, sc=1;
 let drag=false, lx=0, ly=0, moved=false;
 let sel=null, hovId=null;
-let showWormholes=true;
+let showWormholes=true, showNebula=true;
 let animFrame=0;
 
 // 필터
@@ -222,6 +232,9 @@ function applyFilter() {
 document.getElementById('wh-toggle').addEventListener('change', e => {
   showWormholes = e.target.checked; draw();
 });
+document.getElementById('neb-toggle').addEventListener('change', e => {
+  showNebula = e.target.checked; draw();
+});
 
 let openPanel = null;
 function togglePanel(id) {
@@ -232,15 +245,132 @@ function togglePanel(id) {
   openPanel = isOpen ? null : id;
 }
 
-const STARS = Array.from({length:150}, () => [Math.random()*CW, Math.random()*700]);
+const STARS = Array.from({length:160}, () => [Math.random()*CW, Math.random()*750]);
 
 function w2s(x,y) { return {x:x*sc+ox, y:y*sc+oy}; }
 function s2w(x,y) { return {x:(x-ox)/sc, y:(y-oy)/sc}; }
 
+// ── 성운 그리기 ──────────────────────────────────────
+function drawNebulae() {
+  if (!showNebula) return;
+
+  // 사조별 노드 그룹화
+  const groups = {};
+  Object.values(PH).forEach(p => {
+    if (!p.visible) return;
+    if (!groups[p.trad]) groups[p.trad] = [];
+    groups[p.trad].push(p);
+  });
+
+  Object.entries(groups).forEach(([trad, nodes]) => {
+    if (nodes.length < 2) return;
+    const color = (RAW.colors && RAW.colors[trad]) || '#888888';
+
+    // 각 노드마다 방사형 그라디언트 블롭 (겹쳐서 성운 효과)
+    ctx.save();
+    nodes.forEach(p => {
+      const pos = w2s(p.x, p.y);
+      // 화면 밖이면 스킵
+      if (pos.x < -200 || pos.x > W+200 || pos.y < -200 || pos.y > H+200) return;
+
+      const baseR = (p.r + 28) * Math.min(sc, 2);
+      const outerR = baseR * 3.2;
+
+      const grd = ctx.createRadialGradient(pos.x, pos.y, baseR*0.3, pos.x, pos.y, outerR);
+      grd.addColorStop(0,   color + '18');  // 중심 약간 밝게
+      grd.addColorStop(0.4, color + '10');
+      grd.addColorStop(1,   color + '00');  // 가장자리 투명
+
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y, outerR, 0, Math.PI*2);
+      ctx.fillStyle = grd;
+      ctx.fill();
+    });
+    ctx.restore();
+
+    // 클러스터 전체를 아우르는 큰 헤일로 (사조 전체 영역 표시)
+    const xs = nodes.map(p => w2s(p.x, p.y).x);
+    const ys = nodes.map(p => w2s(p.x, p.y).y);
+    const cx2 = (Math.min(...xs) + Math.max(...xs)) / 2;
+    const cy2 = (Math.min(...ys) + Math.max(...ys)) / 2;
+    const rx = (Math.max(...xs) - Math.min(...xs)) / 2 + 55 * Math.min(sc, 1.5);
+    const ry = Math.max(35 * Math.min(sc, 1.5), (Math.max(...ys) - Math.min(...ys)) / 2 + 35 * Math.min(sc, 1.5));
+
+    if (rx < 2 || ry < 2) return;
+
+    ctx.save();
+    ctx.scale(1, 1);
+    const haloGrd = ctx.createRadialGradient(cx2, cy2, 0, cx2, cy2, Math.max(rx, ry));
+    haloGrd.addColorStop(0,   color + '08');
+    haloGrd.addColorStop(0.6, color + '05');
+    haloGrd.addColorStop(1,   color + '00');
+
+    ctx.beginPath();
+    ctx.ellipse(cx2, cy2, rx * 1.2, ry * 1.8, 0, 0, Math.PI*2);
+    ctx.fillStyle = haloGrd;
+    ctx.fill();
+    ctx.restore();
+  });
+}
+
+// ── 혜성 꼬리 그리기 ──────────────────────────────────
+function drawComets() {
+  COMET_IDS.forEach(id => {
+    const p = PH[id];
+    if (!p || !p.visible) return;
+    const pos = w2s(p.x, p.y);
+    if (pos.x < -100 || pos.x > W+100 || pos.y < -100 || pos.y > H+100) return;
+
+    const r = p.r * Math.min(sc, 2.2);
+    // 꼬리 방향: 좌측 (서양 철학 전통 방향)
+    const tailLen = Math.max(60, 100 * Math.min(sc, 1.8));
+    const spread = 0.35;
+    const angle = Math.PI; // 왼쪽
+
+    // 애니메이션 펄스
+    const pulse = 0.55 + 0.45 * Math.sin(animFrame * 0.04 + p.x * 0.003);
+
+    // 꼬리 그라디언트 (삼각형)
+    const ex = pos.x + Math.cos(angle) * tailLen;
+    const ey = pos.y + Math.sin(angle) * tailLen;
+    const grd = ctx.createLinearGradient(pos.x, pos.y, ex, ey);
+    grd.addColorStop(0,   p.color + Math.round(pulse * 180).toString(16).padStart(2,'0'));
+    grd.addColorStop(0.5, p.color + '22');
+    grd.addColorStop(1,   p.color + '00');
+
+    const t1x = pos.x + Math.cos(angle - spread) * tailLen;
+    const t1y = pos.y + Math.sin(angle - spread) * tailLen;
+    const t2x = pos.x + Math.cos(angle + spread) * tailLen;
+    const t2y = pos.y + Math.sin(angle + spread) * tailLen;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(pos.x, pos.y);
+    ctx.lineTo(t1x, t1y);
+    ctx.lineTo(ex, ey);
+    ctx.lineTo(t2x, t2y);
+    ctx.closePath();
+    ctx.fillStyle = grd;
+    ctx.fill();
+
+    // 혜성 핵 글로우
+    const coreGrd = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, r * 2);
+    coreGrd.addColorStop(0, p.color + Math.round(pulse * 120).toString(16).padStart(2,'0'));
+    coreGrd.addColorStop(1, p.color + '00');
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, r * 2, 0, Math.PI*2);
+    ctx.fillStyle = coreGrd;
+    ctx.fill();
+    ctx.restore();
+  });
+}
+
+// ── 메인 드로우 ──────────────────────────────────────
 function draw() {
   ctx.clearRect(0,0,W,H);
   ctx.fillStyle = '#07070e'; ctx.fillRect(0,0,W,H);
 
+  // 1. 별 배경
   ctx.fillStyle = 'rgba(255,255,255,0.18)';
   STARS.forEach(([sx,sy]) => {
     const p = w2s(sx,sy);
@@ -249,6 +379,10 @@ function draw() {
     }
   });
 
+  // 2. 성운 (노드 아래 레이어)
+  drawNebulae();
+
+  // 3. 연도선
   ctx.setLineDash([3,6]); ctx.lineWidth=0.5;
   ctx.strokeStyle='rgba(255,255,255,0.04)';
   [1600,1650,1700,1750,1800,1850,1900,1950,2000].forEach(yr => {
@@ -263,8 +397,13 @@ function draw() {
   });
   ctx.setLineDash([]);
 
+  // 4. 혜성 꼬리 (링크 아래)
+  drawComets();
+
+  // 5. 웜홀
   if(showWormholes) drawWormholes();
 
+  // 6. 일반 링크
   LINKS.forEach(l => {
     const a=PH[l.s], b=PH[l.t];
     if(!a||!b||!a.visible||!b.visible) return;
@@ -280,6 +419,7 @@ function draw() {
     ctx.stroke();
   });
 
+  // 7. 노드
   Object.values(PH).forEach(p => {
     if(!p.visible) return;
     const pos = w2s(p.x,p.y);
@@ -288,6 +428,7 @@ function draw() {
     const isSel = sel&&sel.id===p.id;
     const isHov = hovId===p.id;
 
+    // 웜홀 링
     const inWH = showWormholes && WORMHOLES.some(w => w[0]===p.id||w[1]===p.id);
     if(inWH) {
       const pulse = 0.5+0.5*Math.sin(animFrame*0.03);
@@ -320,12 +461,10 @@ function draw() {
 
 function drawWormholes() {
   WORMHOLES.forEach(wh => {
-    const sid=wh[0], tid=wh[1];
-    const a=PH[sid], b=PH[tid];
+    const a=PH[wh[0]], b=PH[wh[1]];
     if(!a||!b||!a.visible||!b.visible) return;
     const pa=w2s(a.x,a.y), pb=w2s(b.x,b.y);
-    const dx=pb.x-pa.x, dy=pb.y-pa.y;
-    const len=Math.hypot(dx,dy);
+    const dx=pb.x-pa.x, dy=pb.y-pa.y, len=Math.hypot(dx,dy);
     const cx1=pa.x+dx*0.3, cy1=pa.y+dy*0.3-len*0.25;
     const cx2=pa.x+dx*0.7, cy2=pa.y+dy*0.7+len*0.25;
 
@@ -370,6 +509,7 @@ function zm(f) {
   ox=cx-wb.x*sc; oy=cy-wb.y*sc; draw();
 }
 
+// 검색
 const searchEl=document.getElementById('search');
 const resultsEl=document.getElementById('search-results');
 searchEl.addEventListener('input',()=>{
@@ -388,6 +528,7 @@ function goTo(id) {
   sel=p; draw(); showCard(p);
 }
 
+// 마우스
 canvas.addEventListener('wheel',e=>{
   e.preventDefault();
   const rect=canvas.getBoundingClientRect();
@@ -399,22 +540,22 @@ canvas.addEventListener('wheel',e=>{
 
 canvas.addEventListener('mousedown',e=>{drag=true;moved=false;lx=e.clientX;ly=e.clientY;});
 canvas.addEventListener('mousemove',e=>{
-  if(drag) {
-    const dx=e.clientX-lx, dy=e.clientY-ly;
-    if(Math.abs(dx)+Math.abs(dy)>3) moved=true;
-    ox+=dx; oy+=dy; lx=e.clientX; ly=e.clientY; draw();
+  if(drag){
+    const dx=e.clientX-lx,dy=e.clientY-ly;
+    if(Math.abs(dx)+Math.abs(dy)>3)moved=true;
+    ox+=dx;oy+=dy;lx=e.clientX;ly=e.clientY;draw();
   } else {
     const rect=canvas.getBoundingClientRect();
     const mx=e.clientX-rect.left, my=e.clientY-rect.top;
     const wpos=s2w(mx,my);
     let hit=null;
     Object.values(PH).forEach(p=>{
-      if(p.visible&&Math.hypot(p.x-wpos.x,p.y-wpos.y)<p.r+8) hit=p.id;
+      if(p.visible&&Math.hypot(p.x-wpos.x,p.y-wpos.y)<p.r+8)hit=p.id;
     });
     if(hit!==hovId){hovId=hit;draw();}
     const tip=document.getElementById('tip');
     const wtip=document.getElementById('wormhole-tip');
-    if(hit) {
+    if(hit){
       tip.textContent=PH[hit].name+' '+PH[hit].life;
       tip.style.display='block';
       tip.style.left=(mx+14)+'px'; tip.style.top=(my-32)+'px';
@@ -422,7 +563,7 @@ canvas.addEventListener('mousemove',e=>{
     } else {
       tip.style.display='none';
       const wh=getWormholeHover(mx,my);
-      if(wh) {
+      if(wh){
         const na=PH[wh[0]]?PH[wh[0]].name:wh[0];
         const nb=PH[wh[1]]?PH[wh[1]].name:wh[1];
         wtip.innerHTML='<div style="color:rgba(255,200,50,0.8);font-size:10px;margin-bottom:3px;">&#x27F3; 웜홀: '+na+' &#x21D4; '+nb+'</div><div style="color:rgba(255,255,255,0.55);font-size:10px;">'+wh[2]+'</div>';
@@ -436,15 +577,15 @@ canvas.addEventListener('mousemove',e=>{
 });
 canvas.addEventListener('mouseup',e=>{
   drag=false;
-  if(!moved) {
+  if(!moved){
     const rect=canvas.getBoundingClientRect();
     const wpos=s2w(e.clientX-rect.left,e.clientY-rect.top);
     let hit=null;
     Object.values(PH).forEach(p=>{
-      if(p.visible&&Math.hypot(p.x-wpos.x,p.y-wpos.y)<p.r+8) hit=p;
+      if(p.visible&&Math.hypot(p.x-wpos.x,p.y-wpos.y)<p.r+8)hit=p;
     });
-    if(hit) showCard(hit);
-    else {sel=null;document.getElementById('card').style.display='none';draw();}
+    if(hit)showCard(hit);
+    else{sel=null;document.getElementById('card').style.display='none';draw();}
   }
 });
 canvas.addEventListener('mouseleave',()=>{
@@ -454,6 +595,7 @@ canvas.addEventListener('mouseleave',()=>{
   draw();
 });
 
+// 터치
 let tpinch=0;
 canvas.addEventListener('touchstart',e=>{
   e.preventDefault();
@@ -469,7 +611,7 @@ canvas.addEventListener('touchmove',e=>{
     const dx=e.touches[0].clientX-lx,dy=e.touches[0].clientY-ly;
     if(Math.abs(dx)+Math.abs(dy)>3)moved=true;
     ox+=dx;oy+=dy;lx=e.touches[0].clientX;ly=e.touches[0].clientY;draw();
-  }else if(e.touches.length===2){
+  } else if(e.touches.length===2){
     const dist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
     const f=dist/tpinch;tpinch=dist;
     const cx=(e.touches[0].clientX+e.touches[1].clientX)/2;
@@ -494,12 +636,12 @@ canvas.addEventListener('touchend',e=>{
 });
 
 function showCard(p) {
-  sel=p;draw();
+  sel=p; draw();
   document.getElementById('cn').textContent=p.name;
   document.getElementById('cl').textContent=p.life+' · 영향력 '+Math.round(p.inf*100)+'% · 입문 중요도 '+Math.round(p.beg*100)+'%';
   const tradKo=TRAD_KO[p.trad]||p.trad;
   const tradEl=document.getElementById('ctrad');
-  tradEl.textContent='사조: '+tradKo;
+  tradEl.textContent='사조: '+tradKo+(COMET_IDS.has(p.id)?' ☄️':'');
   tradEl.style.color=(RAW.colors&&RAW.colors[p.trad])||'#6865a8';
   document.getElementById('cq').textContent='\u275d '+p.q;
   document.getElementById('cs').textContent=p.summary;
@@ -519,13 +661,13 @@ function showCard(p) {
 }
 function cc() {
   document.getElementById('card').style.display='none';
-  sel=null;draw();
+  sel=null; draw();
 }
 
-function animate(){
+function animate() {
   animFrame++;
-  if(showWormholes&&WORMHOLES.length) draw();
-  setTimeout(()=>requestAnimationFrame(animate),50);
+  draw();
+  setTimeout(()=>requestAnimationFrame(animate), 50);
 }
 animate();
 resize();
