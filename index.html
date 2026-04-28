@@ -262,8 +262,26 @@ RAW.n.forEach(n => {
   PH[n[0]] = {id:n[0],name:n[1],life:n[2],x:n[3],y:n[4],r:n[5],color:n[6],
     summary:n[7],q:n[8],themes:n[9].split('|').filter(Boolean),
     works:n[10].split('|').filter(Boolean),inf:n[11],beg:n[12],trad:n[13],
-    visible:true, dimmed:false};
+    visible:true, dimmed:false, z:0.5};
 });
+
+// ── 2.5D z값 (0=가장 가까운·앞, 1=가장 멈·뒤) ──
+const TRAD_Z = {
+  'post-structuralism':  0.1,
+  'western-marxism':     0.2, 'post-marxism':    0.2,
+  'phenomenology':       0.3, 'existentialism':  0.3,
+  'hermeneutics':        0.35,'critical-theory': 0.35,
+  'structuralism':       0.4, 'psychoanalysis':  0.4,
+  'vitalism':            0.45,'sociology':       0.45,
+  'pragmatism':          0.5, 'analytic-philosophy':0.5,
+  'philosophy-of-science':0.5,'political-philosophy':0.5,
+  'feminist-philosophy': 0.5, 'postcolonialism': 0.5,
+  'new-materialism':     0.5, 'speculative-realism':0.5,
+  'east-asian':          0.5,
+  'german-idealism':     0.6, 'enlightenment':   0.6,
+  'british-empiricism':  0.6, 'continental-rationalism':0.6,
+};
+Object.values(PH).forEach(p => { p.z = TRAD_Z[p.trad] ?? 0.5; });
 const LINKS    = RAW.l.map(l => ({s:l[0],t:l[1],type:l[2],str:l[3],color:l[4],desc:l[5]}));
 const WORMHOLES = RAW.wormholes || [];
 const CW = RAW.w;
@@ -369,22 +387,35 @@ function drawNebulae() {
   Object.entries(groups).forEach(([trad, nodes]) => {
     if (nodes.length < 2) return;
     const color = (RAW.colors && RAW.colors[trad]) || '#888888';
+    // 사조 대표 z (노드 평균)
+    const avgZ = nodes.reduce((s,p)=>s+p.z,0)/nodes.length;
+    const zAlpha = 1 - avgZ * 0.55; // z=0→1.0, z=0.6→0.67
+
     nodes.forEach(p => {
-      const pos = w2s(p.x, p.y);
-      if (pos.x<-200||pos.x>W+200||pos.y<-200||pos.y>H+200) return;
-      const outerR = (p.r+28)*Math.min(sc,2)*3.2;
-      const grd = ctx.createRadialGradient(pos.x,pos.y,0,pos.x,pos.y,outerR);
-      grd.addColorStop(0, color+'18'); grd.addColorStop(0.4, color+'10'); grd.addColorStop(1, color+'00');
-      ctx.beginPath(); ctx.arc(pos.x,pos.y,outerR,0,Math.PI*2); ctx.fillStyle=grd; ctx.fill();
+      // parallax ox*0.5, oy*0.5 (성운은 중간 속도)
+      const px = p.x*sc + ox*0.5;
+      const py = p.y*sc + oy*0.5;
+      if (px<-200||px>W+200||py<-200||py>H+200) return;
+      const outerR = (p.r+22)*Math.min(sc,2)*2.0; // 3.2 → 2.0
+      const a0 = Math.round(0x0e * zAlpha).toString(16).padStart(2,'0');
+      const a1 = Math.round(0x08 * zAlpha).toString(16).padStart(2,'0');
+      const grd = ctx.createRadialGradient(px,py,0,px,py,outerR);
+      grd.addColorStop(0, color+a0); grd.addColorStop(0.4, color+a1); grd.addColorStop(1, color+'00');
+      ctx.beginPath(); ctx.arc(px,py,outerR,0,Math.PI*2); ctx.fillStyle=grd; ctx.fill();
     });
-    const xs=nodes.map(p=>w2s(p.x,p.y).x), ys=nodes.map(p=>w2s(p.x,p.y).y);
-    const cx2=(Math.min(...xs)+Math.max(...xs))/2, cy2=(Math.min(...ys)+Math.max(...ys))/2;
-    const rx=(Math.max(...xs)-Math.min(...xs))/2+55*Math.min(sc,1.5);
-    const ry=Math.max(35*Math.min(sc,1.5),(Math.max(...ys)-Math.min(...ys))/2+35*Math.min(sc,1.5));
+
+    // 클러스터 ellipse (parallax 동일 적용)
+    const sxs = nodes.map(p => p.x*sc + ox*0.5);
+    const sys = nodes.map(p => p.y*sc + oy*0.5);
+    const cx2=(Math.min(...sxs)+Math.max(...sxs))/2, cy2=(Math.min(...sys)+Math.max(...sys))/2;
+    const rx=(Math.max(...sxs)-Math.min(...sxs))/2+50*Math.min(sc,1.5);
+    const ry=Math.max(30*Math.min(sc,1.5),(Math.max(...sys)-Math.min(...sys))/2+30*Math.min(sc,1.5));
     if (rx<2||ry<2) return;
+    const a2 = Math.round(0x05 * zAlpha).toString(16).padStart(2,'0');
+    const a3 = Math.round(0x03 * zAlpha).toString(16).padStart(2,'0');
     const hg=ctx.createRadialGradient(cx2,cy2,0,cx2,cy2,Math.max(rx,ry));
-    hg.addColorStop(0,color+'08'); hg.addColorStop(0.6,color+'05'); hg.addColorStop(1,color+'00');
-    ctx.beginPath(); ctx.ellipse(cx2,cy2,rx*1.2,ry*1.8,0,0,Math.PI*2); ctx.fillStyle=hg; ctx.fill();
+    hg.addColorStop(0,color+a2); hg.addColorStop(0.6,color+a3); hg.addColorStop(1,color+'00');
+    ctx.beginPath(); ctx.ellipse(cx2,cy2,rx*1.1,ry*1.1,0,0,Math.PI*2); ctx.fillStyle=hg; ctx.fill();
   });
 }
 
@@ -482,11 +513,11 @@ function draw() {
   ctx.clearRect(0,0,W,H);
   ctx.fillStyle='#07070e'; ctx.fillRect(0,0,W,H);
 
-  // 1. 별
+  // 1. 별 (parallax: 가장 느리게 — 멀리 있는 배경)
   ctx.fillStyle='rgba(255,255,255,0.18)';
   STARS.forEach(([sx,sy]) => {
-    const p=w2s(sx,sy);
-    if (p.x>-2&&p.x<W+2&&p.y>-2&&p.y<H+2) { ctx.beginPath(); ctx.arc(p.x,p.y,0.5,0,Math.PI*2); ctx.fill(); }
+    const px=sx*sc+ox*0.2, py=sy*sc+oy*0.2;
+    if (px>-2&&px<W+2&&py>-2&&py<H+2) { ctx.beginPath(); ctx.arc(px,py,0.5,0,Math.PI*2); ctx.fill(); }
   });
 
   // 2. 성운
@@ -529,7 +560,10 @@ function draw() {
     if (!p.visible) return;
     const pos=w2s(p.x,p.y);
     if (pos.x<-60||pos.x>W+60||pos.y<-60||pos.y>H+60) return;
-    const r=p.r*Math.min(sc,2.2);
+    // 2.5D: z=0(앞)→ 크기 100%, 투명도 100% / z=1(뒤)→ 크기 65%, 투명도 40%
+    const rz = p.r * (1 - p.z * 0.35);          // 표시 반경
+    const r  = rz * Math.min(sc, 2.2);
+    const depthAlpha = Math.max(0.4, 1 - p.z * 0.6); // 깊이 투명도 (0.4~1.0)
     const isSel=sel&&sel.id===p.id, isHov=hovId===p.id, isDimmed=p.dimmed;
     const inWH=showWormholes&&WORMHOLES.some(w=>w[0]===p.id||w[1]===p.id);
     if (inWH&&!isDimmed) {
@@ -543,12 +577,15 @@ function draw() {
       ctx.beginPath(); ctx.arc(pos.x,pos.y,r*2.5,0,Math.PI*2); ctx.fillStyle=grd; ctx.fill();
     }
     ctx.beginPath(); ctx.arc(pos.x,pos.y,r,0,Math.PI*2);
-    ctx.fillStyle=p.color+(isDimmed?'33':isSel?'ff':isHov?'ee':'bb'); ctx.fill();
-    ctx.strokeStyle=isSel?'rgba(255,255,255,0.7)':isDimmed?p.color+'22':p.color+'88';
+    // 선택·호버 시 z 보정 무시(항상 선명), 평상시는 depthAlpha 반영
+    const baseAlpha = isDimmed ? 0.2 : isSel ? 1.0 : isHov ? 0.93 : depthAlpha;
+    ctx.fillStyle = p.color + Math.round(baseAlpha * (isDimmed?0x33:0xbb)).toString(16).padStart(2,'0');
+    ctx.fill();
+    ctx.strokeStyle = isSel ? 'rgba(255,255,255,0.7)' : isDimmed ? p.color+'22' : p.color+Math.round(baseAlpha*0x88).toString(16).padStart(2,'0');
     ctx.lineWidth=isSel?1.8:0.8; ctx.stroke();
     if (sc>0.28&&!isDimmed) {
       const fs=Math.max(9,10*Math.min(sc,1.4));
-      ctx.fillStyle=isSel?'#fff':isHov?'#eee':'rgba(200,198,240,0.80)';
+      ctx.fillStyle=isSel?'#fff':isHov?'#eee':('rgba(200,198,240,'+Math.max(0.45, baseAlpha*0.85)+')');
       ctx.font=fs+'px sans-serif'; ctx.textAlign='center';
       ctx.fillText(p.name,pos.x,pos.y-r-3.5*Math.min(sc,1.5));
     }
@@ -662,7 +699,7 @@ canvas.addEventListener('mousemove', e => {
     const wpos=s2w(mx,my);
     let hitNode=null;
     Object.values(PH).forEach(p => {
-      if (p.visible&&!p.dimmed&&Math.hypot(p.x-wpos.x,p.y-wpos.y)<p.r+8) hitNode=p.id;
+      if (p.visible&&!p.dimmed&&Math.hypot(p.x-wpos.x,p.y-wpos.y)<p.r*(1-p.z*0.35)+8) hitNode=p.id;
     });
     if (hitNode!==hovId) { hovId=hitNode; draw(); }
     const tip=document.getElementById('tip');
@@ -690,7 +727,7 @@ canvas.addEventListener('mouseup', e => {
     const mx=e.clientX-rect.left, my=e.clientY-rect.top;
     const wpos=s2w(mx,my);
     let hitNode=null;
-    Object.values(PH).forEach(p => { if (p.visible&&Math.hypot(p.x-wpos.x,p.y-wpos.y)<p.r+8) hitNode=p; });
+    Object.values(PH).forEach(p => { if (p.visible&&Math.hypot(p.x-wpos.x,p.y-wpos.y)<p.r*(1-p.z*0.35)+8) hitNode=p; });
     if (hitNode) { showCard(hitNode); hideLinkPopup(); return; }
     const hitLink=getLinkHover(mx,my);
     if (hitLink) { showLinkPopup(hitLink,mx,my); sel=null; draw(); return; }
@@ -736,7 +773,7 @@ canvas.addEventListener('touchend', e => {
     const rect=canvas.getBoundingClientRect();
     const wpos=s2w(e.changedTouches[0].clientX-rect.left, e.changedTouches[0].clientY-rect.top);
     let hit=null;
-    Object.values(PH).forEach(p => { if (p.visible&&Math.hypot(p.x-wpos.x,p.y-wpos.y)<p.r+10) hit=p; });
+    Object.values(PH).forEach(p => { if (p.visible&&Math.hypot(p.x-wpos.x,p.y-wpos.y)<p.r*(1-p.z*0.35)+10) hit=p; });
     if (hit) showCard(hit);
   }
   drag=false;
