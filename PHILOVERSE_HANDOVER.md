@@ -199,8 +199,9 @@ philosophy-universe/
 2. ~~`api/search.js`, `scripts/generate_embeddings.js`, `package.json` 등 작성~~ (완료)
 3. `node --env-file=.env scripts/generate_embeddings.js` 실행 → `embeddings.json` 생성·검증 (276 docs, 1536차원)
 4. `vercel dev` 또는 Preview 배포로 `/api/search` 동작 확인
-5. `main` 반영 → 자동 배포
-6. 배포 후 확인: Vercel Functions 탭에 `api/search` 존재, 환경변수 반영, 라이브 사이트에서 의미 검색 동작
+5. `index.html`의 `SEMANTIC_ENABLED`를 `true`로 변경 (false인 동안 검색 패널의 키워드/의미(AI) 모드 선택이 숨겨지고 키워드 검색만 노출)
+6. `main` 반영 → 자동 배포
+7. 배포 후 확인: Vercel Functions 탭에 `api/search` 존재, 환경변수 반영, 라이브 사이트에서 의미 검색 동작
 
 ### 트러블슈팅
 
@@ -212,7 +213,7 @@ philosophy-universe/
 | "인덱스 로드 실패: embeddings.json not found" | `embeddings.json` 미배포 | 저장소 루트에 파일 존재 확인 후 재배포 |
 | 백엔드 에러 "server not configured" | `OPENAI_API_KEY` 미설정 | Vercel 환경변수 등록 후 재배포 |
 
-**현재 라이브 상태**: 검색 패널의 "의미 (AI)" 모드가 노출되어 있으나 백엔드가 없어 선택 시 인덱스 로드 실패가 표시됨.
+**현재 라이브 상태**: `SEMANTIC_ENABLED = false`로 의미(AI) 모드 선택을 숨김. `api/search.js`는 배포되어 있으나 `OPENAI_API_KEY`가 없어 호출 시 500("server not configured"). 사용자가 신호를 주기 전까지 활성화하지 않음.
 
 ---
 

@@ -4988,6 +4988,12 @@ function clearDeepSearch() {
 
 // ── 검색 모드 전환 (키워드 / 의미) ──
 let searchMode = 'keyword';
+// 의미(AI) 검색 공개 스위치: embeddings.json 배포 + Vercel OPENAI_API_KEY 설정 후 true로 변경
+const SEMANTIC_ENABLED = false;
+if (!SEMANTIC_ENABLED) {
+  const toggle = document.querySelector('.sp-mode-toggle');
+  if (toggle) toggle.style.display = 'none';
+}
 function setSearchMode(mode) {
   searchMode = mode;
   const help = document.getElementById('sp-help-text');
