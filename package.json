@@ -1,0 +1,8 @@
+{
+  "name": "philosophy-universe",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "embed": "node --env-file=.env scripts/generate_embeddings.js"
+  }
+}
