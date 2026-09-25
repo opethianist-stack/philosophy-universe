@@ -502,6 +502,85 @@ canvas:active{cursor:grabbing;}
 @media (max-width:374px){
   #btns button:nth-child(2),#btns button:nth-child(3){display:none;} /* 확대·축소는 핀치 줌으로 */
 }
+/* ── 모바일 글자 크기·대비: 라벨 11px / 보조 본문 12px / 본문 13px, 흰색 불투명도 0.55 이상 ── */
+@media (max-width:600px){
+  /* 상단·탭바·범례 */
+  #btns button{font-size:12px;}
+  .pb-lb::before{font-size:11px;}
+  #rel-legend div{font-size:11px;color:rgba(255,255,255,0.6);}
+  #route-active-banner .rab-label{font-size:11px;color:rgba(200,190,240,0.8);}
+  /* 진입·주제 선택 모달 */
+  .em-sub,.ts-sub{font-size:13px;color:#a7a3c2;}
+  .em-option-desc{font-size:12px;color:#aaa4c4;}
+  .em-skip,.em-dont-show,.ts-back{font-size:12px;color:#a19cba;}
+  .ts-card-q{font-size:12px;color:#aaa4c4;}
+  .ts-card-meta{font-size:11px;color:#8f8aa8;}
+  /* 시트 공통 */
+  .side-panel h4,#topic-input-wrap h4{font-size:12px;color:rgba(255,255,255,0.7);}
+  .trad-info-icon{color:rgba(255,255,255,0.6);}
+  .trad-info-expand .ti-label{font-size:11px;color:rgba(255,255,255,0.55);}
+  .trad-info-expand .ti-q{font-size:12px;color:rgba(230,228,240,0.85);}
+  #path-desc,#q-desc{font-size:12px;color:rgba(255,255,255,0.68);line-height:1.6;}
+  #path-nodes{font-size:12px;color:rgba(130,215,130,0.9);}
+  #fx-panel label{font-size:13px;color:rgba(255,255,255,0.8);min-height:36px;}
+  .fx-desc{font-size:11px;color:rgba(255,255,255,0.55);}
+  /* 주제 항로 */
+  #topic-desc{font-size:12px;color:rgba(255,255,255,0.6);}
+  .topic-preset-btn{font-size:12px;}
+  .topic-short-title{font-size:11px;color:rgba(150,205,95,0.9);}
+  .topic-framing{font-size:12.5px;color:rgba(215,212,255,0.78);}
+  .topic-sec-label{font-size:11px;color:rgba(255,255,255,0.55);}
+  .topic-tag{font-size:11px;color:rgba(180,220,120,0.85);}
+  .topic-q-item{font-size:12px;color:rgba(215,212,255,0.75);}
+  .topic-not-found{font-size:12px;color:rgba(255,255,255,0.6);}
+  #topic-route-clear{font-size:12px;color:rgba(255,255,255,0.6);}
+  .route-card-title{font-size:13px;}
+  .route-card-q{font-size:12px;color:rgba(215,212,255,0.72);}
+  .route-summary{font-size:12px;color:rgba(255,255,255,0.62);}
+  .route-go-btn,.route-phil-btn{font-size:12px;}
+  .route-arrow{font-size:11px;color:rgba(255,255,255,0.45);}
+  /* 의미 검색 */
+  .sp-mode-toggle span{font-size:12px;}
+  #sp-stats{font-size:11px;color:rgba(255,255,255,0.6);}
+  .sp-card .sp-type{font-size:10.5px;}
+  .sp-card .sp-score{font-size:11px;color:rgba(255,255,255,0.55);}
+  .sp-card .sp-title{font-size:13.5px;}
+  .sp-card .sp-meta{font-size:11.5px;color:rgba(255,255,255,0.6);}
+  .sp-card .sp-snippet{font-size:12.5px;}
+  /* 학자 카드(하단 시트) */
+  #card-close{color:rgba(255,255,255,0.6);}
+  #cn{font-size:18px;}
+  #cl{font-size:11.5px;color:rgba(255,255,255,0.55);}
+  #ctrad{font-size:12px;filter:brightness(2);}   /* 사조 색을 글자색으로 쓰므로 어두운 색은 밝혀서 */
+  #cq{font-size:13px;color:#b3aeef;}
+  #cmeta-hook{font-size:13.5px;}
+  #cmeta-metaphor-label{font-size:11px;color:rgba(255,255,255,0.55);letter-spacing:0.5px;}
+  #cmeta-metaphor{font-size:13px;color:rgba(255,255,255,0.75);}
+  #cs{font-size:13px;color:rgba(215,212,255,0.8);}
+  #ct span{font-size:11.5px;color:rgba(215,212,255,0.85);}
+  #cw,#cr{font-size:12px;color:rgba(255,255,255,0.6);}
+  #cr strong{color:rgba(160,152,240,0.95);}
+  .nc-section-label{font-size:11px;color:rgba(255,255,255,0.55);}
+  .nc-next-icon{font-size:12px;color:rgba(190,160,255,0.8);}
+  .nc-next-label{font-size:12px;color:rgba(220,218,255,0.75);min-width:72px;}
+  .nc-next-chip{font-size:12px;padding:4px 9px;}
+  /* 관계선 팝업·툴팁 */
+  #link-popup .lp-title{font-size:13px;}
+  #link-popup .lp-type{font-size:11px;}
+  #link-popup .lp-desc{font-size:12px;color:rgba(255,255,255,0.72);}
+  #tip,#wormhole-tip{font-size:12px;}
+  /* 사조 영향 그래프 */
+  .tg-btn{font-size:12px;}
+  .tg-seg-btn.tg-active{background:#3461c1;border-color:#3461c1;}
+  .tg-ctrl-row label{font-size:12px;color:#bbb;}
+  .tg-hint{font-size:11px;color:#a0a0a8;}
+  .tg-info .tg-stat{font-size:11.5px;color:#a0a0a8;}
+  .tg-info .tg-field-label{font-size:11px;color:#a0a0a8;}
+  .tg-info .tg-field-val{font-size:13px;}
+  .tg-reps .tg-chip{font-size:11.5px;}
+  .tg-conn-row{font-size:12px;}
+  .tg-strength{font-size:11px;color:#a0a0a8;}
+}
 </style>
 </head>
 <body>
