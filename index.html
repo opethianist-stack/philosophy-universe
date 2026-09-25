@@ -342,7 +342,7 @@ canvas:active{cursor:grabbing;}
 .tg-close{background:rgba(255,255,255,0.06);color:#ddd;border:0.5px solid rgba(255,255,255,0.12);padding:5px 12px;border-radius:5px;cursor:pointer;font-family:inherit;font-size:12px;}
 .tg-close:hover{background:rgba(255,255,255,0.12);color:#fff;}
 .tg-canvas-wrap{flex:1;position:relative;overflow:hidden;}
-.tg-canvas{display:block;cursor:grab;width:100%;height:100%;}
+.tg-canvas{display:block;cursor:grab;width:100%;height:100%;touch-action:none;}
 .tg-canvas.tg-grabbing{cursor:grabbing;}
 .tg-canvas.tg-pointer{cursor:pointer;}
 .tg-controls{position:absolute;top:12px;left:12px;background:rgba(20,20,32,0.92);backdrop-filter:blur(8px);border:0.5px solid rgba(255,255,255,0.08);border-radius:8px;padding:12px 14px;font-size:12px;min-width:220px;z-index:5;}
@@ -371,9 +371,21 @@ canvas:active{cursor:grabbing;}
 .tg-out{color:#f9c777;}
 .tg-in{color:#77c0f9;}
 .tg-strength{color:#888;font-size:10px;font-variant-numeric:tabular-nums;}
+.tg-hint-touch{display:none;}
+@media (max-width:600px){.tg-hint-desk{display:none;}.tg-hint-touch{display:inline;}}
 .tg-hint{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);color:#888;font-size:10.5px;z-index:4;background:rgba(20,20,32,0.7);padding:5px 12px;border-radius:4px;pointer-events:none;}
 @media (max-width:600px){
-  .tg-controls{min-width:auto;width:calc(100vw - 24px);font-size:11px;}
+  .tg-controls{min-width:auto;width:calc(100vw - 24px);font-size:11px;padding:8px 10px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;box-sizing:border-box;}
+  .tg-controls .tg-ctrl-row{margin:0;}
+  .tg-controls .tg-ctrl-row:first-child{flex:1 1 100%;}
+  .tg-controls .tg-ctrl-row:nth-child(2){display:none;}
+  .tg-controls .tg-ctrl-row:last-child{flex:1;}
+  .tg-ctrl-row label{min-width:auto;}
+  .tg-header{padding:0 12px;gap:8px;}
+  .tg-header h2{font-size:13px;white-space:nowrap;}
+  .tg-header .tg-meta{display:none;}
+  .tg-close{margin-left:auto;white-space:nowrap;}
+  .tg-hint{white-space:nowrap;font-size:10px;}
   .tg-info{width:calc(100vw - 24px);max-height:45vh;top:auto;bottom:38px;}
 }
 
@@ -6043,7 +6055,7 @@ function hideTradTooltipExternal() {
     <div class="tg-info tg-hidden" id="tg-info">
       <div id="tg-info-content"></div>
     </div>
-    <div class="tg-hint">노드 클릭 &middot; 드래그로 이동 &middot; 휠 줌 &middot; 빈 공간 드래그로 패닝</div>
+    <div class="tg-hint"><span class="tg-hint-desk">노드 클릭 &middot; 드래그로 이동 &middot; 휠 줌 &middot; 빈 공간 드래그로 패닝</span><span class="tg-hint-touch">탭 선택 &middot; 드래그 이동 &middot; 두 손가락 확대</span></div>
   </div>
 </div>
 
@@ -6067,6 +6079,8 @@ function hideTradTooltipExternal() {
   let dragging = null, panning = false, panStart = null, panViewStart = null;
   let maxStrength = 1, maxCount = 1;
   let W = 0, H = 0;
+  let userMovedView = false;   // 사용자가 줌·패닝하기 전까지는 레이아웃에 맞춰 자동 맞춤
+  const LABEL_FONT = '-apple-system, "Pretendard", sans-serif';
 
   function resize() {
     const r = canvas.parentElement.getBoundingClientRect();
@@ -6113,6 +6127,19 @@ function hideTradTooltipExternal() {
         vx: 0, vy: 0, fx: null, fy: null
       };
     });
+    // 라벨 크기를 반영한 충돌 박스: 원 안에 라벨(r>18) / 원 아래 라벨(r<=18)
+    ctx.font = '500 13px ' + LABEL_FONT;
+    nodes.forEach(n => {
+      const lw = ctx.measureText(n.name).width;
+      const inside = n.r > 18 && lw <= n.r * 2 + 16;   // draw()와 같은 기준
+      n.hw = Math.max(n.r, lw / 2 + 3);
+      n.hh = inside ? n.r : n.r + 9;
+      n.boy = inside ? 0 : 9;
+      // 밝은 원 위의 라벨은 어두운 글자로
+      const hex = n.color.replace('#', '');
+      const [rr, gg, bb] = [0, 2, 4].map(k => parseInt(hex.substr(k, 2), 16) / 255);
+      n.light = (0.299 * rr + 0.587 * gg + 0.114 * bb) > 0.72;
+    });
     nodeMap = {};
     nodes.forEach(n => nodeMap[n.id] = n);
     links = Object.values(tradLinks).map(l => ({
@@ -6139,9 +6166,7 @@ function hideTradTooltipExternal() {
         let d2 = dx*dx + dy*dy;
         if (d2 < 1) d2 = 1;
         const d = Math.sqrt(d2);
-        const minDist = a.r + b.r + 18;
-        let force = 1800 / d2;
-        if (d < minDist) force += (minDist - d) * 0.5;
+        const force = 1800 / d2;
         const fx = (dx / d) * force, fy = (dy / d) * force;
         a.vx -= fx; a.vy -= fy;
         b.vx += fx; b.vy += fy;
@@ -6171,6 +6196,23 @@ function hideTradTooltipExternal() {
       if (v > 30) { n.vx = n.vx / v * 30; n.vy = n.vy / v * 30; }
       n.x += n.vx * simAlpha;
       n.y += n.vy * simAlpha;
+    }
+    // 라벨 박스 충돌: 힘이 아니라 위치를 직접 보정해 링크 인력에 눌리지 않게 함
+    for (let iter = 0; iter < 3; iter++) {
+      for (let i = 0; i < N; i++) {
+        for (let j = i+1; j < N; j++) {
+          const a = nodes[i], b = nodes[j];
+          const dx = b.x - a.x, dy = (b.y + b.boy) - (a.y + a.boy);
+          const ovx = a.hw + b.hw + 8 - Math.abs(dx);
+          const ovy = a.hh + b.hh + 6 - Math.abs(dy);
+          if (ovx <= 0 || ovy <= 0) continue;
+          const aFixed = a.fx !== null, bFixed = b.fx !== null;
+          if (aFixed && bFixed) continue;
+          const ka = aFixed ? 0 : (bFixed ? 1 : 0.5), kb = 1 - ka;
+          if (ovx < ovy) { const sx = Math.sign(dx) || 1; a.x -= sx * ovx * ka; b.x += sx * ovx * kb; }
+          else { const sy = Math.sign(dy) || 1; a.y -= sy * ovy * ka; b.y += sy * ovy * kb; }
+        }
+      }
     }
     simAlpha *= 0.992;
   }
@@ -6287,28 +6329,73 @@ function hideTradTooltipExternal() {
       ctx.lineWidth = isFocus ? 2.2 : 1.2;
       ctx.strokeStyle = isFocus ? '#fff' : 'rgba(255,255,255,0.35)';
       ctx.stroke();
+    }
+
+    // 라벨: 포커스·이웃·호버 → 큰 노드 순. 이미 놓인 라벨과 겹치면 생략(포커스 계열은 항상 표시)
+    const rank = n => n.id === focusId ? 0 : (neighbors && neighbors.has(n.id)) ? 1 : n.id === hovId ? 2 : 3;
+    const order = nodes.slice().sort((a, b) => rank(a) - rank(b) || b.r - a.r);
+    const placed = [];
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    for (const n of order) {
+      const sp = w2s(n.x, n.y);
+      const sx = sp[0], sy = sp[1];
+      if (sx < -80 || sx > W + 80 || sy < -40 || sy > H + 40) continue;
+      const r = n.r * view.scale;
+      const isFocus = n.id === focusId;
       const fontSize = Math.max(10, Math.min(13, 10 + r * 0.18));
-      ctx.font = (isFocus ? '700 ' : '500 ') + fontSize + 'px -apple-system, "Pretendard", sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      if (r > 18) {
+      ctx.font = (isFocus ? '700 ' : '500 ') + fontSize + 'px ' + LABEL_FONT;
+      const tw = ctx.measureText(n.name).width;
+      const inside = r > 18 && tw <= r * 2 + 16;
+      const ly = inside ? sy : sy + r + 12;
+      const lx = inside ? sx : Math.min(Math.max(sx, tw / 2 + 4), W - tw / 2 - 4);   // 원 아래 라벨은 화면 밖으로 잘리지 않게
+      const box = [lx - tw / 2 - 2, ly - fontSize / 2 - 2, lx + tw / 2 + 2, ly + fontSize / 2 + 2];
+      const must = rank(n) < 3;
+      if (!must && placed.some(q => box[0] < q[2] && box[2] > q[0] && box[1] < q[3] && box[3] > q[1])) continue;
+      placed.push(box);
+      ctx.globalAlpha = (dimMode && rank(n) === 3) ? 0.28 : 1;
+      if (inside && n.light) {
+        ctx.fillStyle = '#14121f';
+        ctx.fillText(n.name, sx, ly);
+      } else if (inside) {
         ctx.fillStyle = 'rgba(0,0,0,0.85)';
-        ctx.fillText(n.name, sx, sy);
+        ctx.fillText(n.name, sx, ly);
         ctx.fillStyle = '#fff';
-        ctx.fillText(n.name, sx, sy - 0.4);
+        ctx.fillText(n.name, sx, ly - 0.4);
       } else {
         ctx.fillStyle = 'rgba(0,0,0,0.55)';
-        ctx.fillText(n.name, sx, sy + r + 12 + 0.5);
+        ctx.fillText(n.name, lx, ly + 0.5);
         ctx.fillStyle = '#fff';
-        ctx.fillText(n.name, sx, sy + r + 12);
+        ctx.fillText(n.name, lx, ly);
       }
     }
     ctx.globalAlpha = 1;
   }
 
+  function fitView() {
+    if (!nodes.length) return;
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const n of nodes) {
+      x0 = Math.min(x0, n.x - n.hw); x1 = Math.max(x1, n.x + n.hw);
+      y0 = Math.min(y0, n.y + n.boy - n.hh); y1 = Math.max(y1, n.y + n.boy + n.hh);
+    }
+    // 모바일은 상단 컨트롤 박스 아래 영역에 맞춤
+    let top = 8, bottom = H - 36;
+    if (W <= 600) {
+      const c = document.querySelector('.tg-controls').getBoundingClientRect();
+      const cv = canvas.getBoundingClientRect();
+      top = c.bottom - cv.top + 8;
+    }
+    const scale = Math.max(0.3, Math.min(1, (W - 24) / (x1 - x0), (bottom - top) / (y1 - y0)));
+    view.scale = scale;
+    view.tx = -((x0 + x1) / 2) * scale;
+    view.ty = (top + bottom) / 2 - H / 2 - ((y0 + y1) / 2) * scale;
+  }
+
   function loop() {
     if (!opened) { raf = null; return; }
     tick();
+    if (!userMovedView && simAlpha >= 0.005) fitView();
     draw();
     raf = requestAnimationFrame(loop);
   }
@@ -6379,11 +6466,8 @@ function hideTradTooltipExternal() {
     content.innerHTML = h;
   }
 
-  // 인터랙션
-  canvas.addEventListener('mousemove', (e) => {
-    if (!opened) return;
-    const rect = canvas.getBoundingClientRect();
-    const sx = e.clientX - rect.left, sy = e.clientY - rect.top;
+  // 인터랙션 (마우스·터치 공용)
+  function pointerMove(sx, sy) {
     if (dragging) {
       const wp = s2w(sx, sy);
       dragging.fx = wp[0]; dragging.fy = wp[1];
@@ -6393,32 +6477,26 @@ function hideTradTooltipExternal() {
     if (panning) {
       view.tx = panViewStart.tx + (sx - panStart.x);
       view.ty = panViewStart.ty + (sy - panStart.y);
+      if (Math.hypot(sx - panStart.x, sy - panStart.y) >= 4) userMovedView = true;
       return;
     }
     const n = getNodeAt(sx, sy);
     hovId = n ? n.id : null;
     canvas.classList.toggle('tg-pointer', !!n);
-  });
-  canvas.addEventListener('mousedown', (e) => {
-    if (!opened) return;
-    const rect = canvas.getBoundingClientRect();
-    const sx = e.clientX - rect.left, sy = e.clientY - rect.top;
+  }
+  function pointerDown(sx, sy) {
     const n = getNodeAt(sx, sy);
     if (n) {
       dragging = n;
       n.fx = n.x; n.fy = n.y;
-      canvas.classList.add('tg-grabbing');
     } else {
       panning = true;
       panStart = { x: sx, y: sy };
       panViewStart = { tx: view.tx, ty: view.ty };
-      canvas.classList.add('tg-grabbing');
     }
-  });
-  canvas.addEventListener('mouseup', (e) => {
-    if (!opened) return;
-    const rect = canvas.getBoundingClientRect();
-    const sx = e.clientX - rect.left, sy = e.clientY - rect.top;
+    canvas.classList.add('tg-grabbing');
+  }
+  function pointerUp(sx, sy) {
     if (dragging) {
       const moved = Math.hypot(dragging.fx - dragging.x, dragging.fy - dragging.y);
       dragging.fx = null; dragging.fy = null;
@@ -6436,6 +6514,28 @@ function hideTradTooltipExternal() {
       panning = false;
     }
     canvas.classList.remove('tg-grabbing');
+  }
+  function zoomAt(sx, sy, factor) {
+    const wp = s2w(sx, sy);
+    view.scale = Math.max(0.3, Math.min(3.5, view.scale * factor));
+    const sp = w2s(wp[0], wp[1]);
+    view.tx += sx - sp[0];
+    view.ty += sy - sp[1];
+    userMovedView = true;
+  }
+  const localXY = (x, y) => { const rect = canvas.getBoundingClientRect(); return [x - rect.left, y - rect.top]; };
+
+  canvas.addEventListener('mousemove', (e) => {
+    if (!opened) return;
+    pointerMove(...localXY(e.clientX, e.clientY));
+  });
+  canvas.addEventListener('mousedown', (e) => {
+    if (!opened) return;
+    pointerDown(...localXY(e.clientX, e.clientY));
+  });
+  canvas.addEventListener('mouseup', (e) => {
+    if (!opened) return;
+    pointerUp(...localXY(e.clientX, e.clientY));
   });
   canvas.addEventListener('mouseleave', () => {
     hovId = null;
@@ -6443,17 +6543,48 @@ function hideTradTooltipExternal() {
     panning = false;
     canvas.classList.remove('tg-grabbing');
   });
+
+  // 터치: 한 손가락 = 노드 드래그/패닝/탭 선택, 두 손가락 = 핀치 줌
+  let pinchDist = 0;
+  const touchDist = t => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+  canvas.addEventListener('touchstart', (e) => {
+    if (!opened) return;
+    e.preventDefault();
+    if (e.touches.length === 1) {
+      pointerDown(...localXY(e.touches[0].clientX, e.touches[0].clientY));
+    } else if (e.touches.length === 2) {
+      if (dragging) { dragging.fx = null; dragging.fy = null; dragging = null; }
+      panning = false;
+      pinchDist = touchDist(e.touches);
+    }
+  }, { passive: false });
+  canvas.addEventListener('touchmove', (e) => {
+    if (!opened) return;
+    e.preventDefault();
+    if (e.touches.length === 1) {
+      pointerMove(...localXY(e.touches[0].clientX, e.touches[0].clientY));
+    } else if (e.touches.length === 2 && pinchDist) {
+      const d = touchDist(e.touches);
+      const mid = localXY((e.touches[0].clientX + e.touches[1].clientX) / 2, (e.touches[0].clientY + e.touches[1].clientY) / 2);
+      zoomAt(mid[0], mid[1], d / pinchDist);
+      pinchDist = d;
+    }
+  }, { passive: false });
+  canvas.addEventListener('touchend', (e) => {
+    if (!opened) return;
+    e.preventDefault();
+    if (e.touches.length === 0) {
+      if (!pinchDist) pointerUp(...localXY(e.changedTouches[0].clientX, e.changedTouches[0].clientY));
+      else { panning = false; canvas.classList.remove('tg-grabbing'); }
+      pinchDist = 0;
+      hovId = null;
+    }
+  }, { passive: false });
   canvas.addEventListener('wheel', (e) => {
     if (!opened) return;
     e.preventDefault();
-    const rect = canvas.getBoundingClientRect();
-    const sx = e.clientX - rect.left, sy = e.clientY - rect.top;
-    const wp = s2w(sx, sy);
-    const factor = e.deltaY < 0 ? 1.12 : 1/1.12;
-    view.scale = Math.max(0.3, Math.min(3.5, view.scale * factor));
-    const sp = w2s(wp[0], wp[1]);
-    view.tx += sx - sp[0];
-    view.ty += sy - sp[1];
+    const [sx, sy] = localXY(e.clientX, e.clientY);
+    zoomAt(sx, sy, e.deltaY < 0 ? 1.12 : 1/1.12);
   }, { passive: false });
 
   document.getElementById('tg-threshold').addEventListener('input', (e) => {
@@ -6480,6 +6611,7 @@ function hideTradTooltipExternal() {
       n.fx = null; n.fy = null;
     });
     view = { tx:0, ty:0, scale:1 };
+    userMovedView = false;
     reheat();
   });
 
@@ -6491,6 +6623,7 @@ function hideTradTooltipExternal() {
       buildData();
       simAlpha = 1.0;
       view = { tx:0, ty:0, scale:1 };
+      userMovedView = false;
       selId = null; hovId = null;
       updateInfoPanel();
       ensureLoop();
