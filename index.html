@@ -5676,10 +5676,21 @@ animate();
 
 // 초기 위치: 좌측 epoch 띠를 피해 사조축 시작 / 시간축은 위에서 시작
 function initialPosition() {
-  const minX = Math.min(...Object.values(PH).map(p => p.x));
+  const nodes = Object.values(PH);
+  const minX = Math.min(...nodes.map(p => p.x));
   const leftPadding = 100;       // 좌측 epoch 띠(90px) + 약간 여백
   ox = leftPadding - minX * sc;
   oy = 60;
+  if (W <= 600) {
+    // 모바일: 전체 최소 x에 맞추면 폭이 좁아 빈 영역만 보이므로,
+    // 상단바(84px)~탭바(60px) 사이에 보이는 시대 구간의 가장 왼쪽 노드에서 시작
+    sc = 0.7;
+    oy = 100;
+    const y0 = (84 - oy) / sc, y1 = (H - 60 - oy) / sc;
+    const band = nodes.filter(p => p.y >= y0 && p.y <= y1);
+    const bandMinX = band.length ? Math.min(...band.map(p => p.x)) : minX;
+    ox = leftPadding + 50 - bandMinX * sc;   // 노드 라벨 절반 폭만큼 여유
+  }
 }
 
 resize();            // 먼저 W, H를 설정하고 1차 draw
