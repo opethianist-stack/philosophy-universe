@@ -378,7 +378,7 @@ canvas:active{cursor:grabbing;}
 }
 
 /* ── 의미 검색 패널 ── */
-#search-panel{min-width:340px;max-width:380px;display:flex;flex-direction:column;}
+#search-panel{min-width:340px;max-width:380px;}
 .sp-mode-toggle{display:flex;gap:6px;margin:4px 0 6px 0;background:rgba(0,0,0,0.3);
   border-radius:6px;padding:3px;}
 .sp-mode-toggle label{flex:1;cursor:pointer;}
@@ -428,6 +428,34 @@ canvas:active{cursor:grabbing;}
 @media (max-width:600px){
   #search-panel{min-width:auto;max-width:calc(100vw - 24px);}
   #sp-results{max-height:50vh;}
+}
+/* ── 모바일 상단바: 1행 로고·버튼 / 2행 검색창 ── */
+@media (max-width:600px){
+  #topbar{height:auto;flex-wrap:wrap;padding:8px 12px;gap:8px 10px;}
+  #meta{display:none;}
+  #btns{margin-left:auto;flex-shrink:0;}
+  #btns button{white-space:nowrap;padding:5px 8px;}
+  #search-wrap{order:3;flex:1 0 100%;margin-left:0;}
+  #search{width:100%;box-sizing:border-box;font-size:16px;padding:6px 10px;}
+  #panels{top:94px;right:12px;max-width:none;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;}
+  #panels::-webkit-scrollbar{display:none;}
+  .panel-btn{flex-shrink:0;}
+  .side-panel{top:124px;max-height:calc(100vh - 200px);max-height:calc(100dvh - 200px);}
+  #hint{display:none;}
+}
+/* 모달이 화면보다 길면 위가 잘리지 않고 스크롤되도록 */
+.em-overlay,.ts-overlay{overflow-y:auto;}
+.em-box,.ts-box{margin:auto;}
+@media (max-width:600px){
+  .em-overlay,.ts-overlay{padding:12px;}
+  .em-box{padding:22px 16px;}
+  .em-logo{margin-bottom:12px;}
+  .em-sub{margin-bottom:16px;}
+  .em-options{gap:10px;}
+  .em-option{padding:12px 12px;gap:6px;}
+}
+@media (max-width:374px){
+  #btns button:nth-child(2),#btns button:nth-child(3){display:none;} /* 확대·축소는 핀치 줌으로 */
 }
 </style>
 </head>
