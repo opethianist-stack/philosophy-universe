@@ -437,11 +437,44 @@ canvas:active{cursor:grabbing;}
   #btns button{white-space:nowrap;padding:5px 8px;}
   #search-wrap{order:3;flex:1 0 100%;margin-left:0;}
   #search{width:100%;box-sizing:border-box;font-size:16px;padding:6px 10px;}
-  #panels{top:94px;right:12px;max-width:none;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;}
-  #panels::-webkit-scrollbar{display:none;}
-  .panel-btn{flex-shrink:0;}
-  .side-panel{top:124px;max-height:calc(100vh - 200px);max-height:calc(100dvh - 200px);}
   #hint{display:none;}
+}
+/* ── 모바일 하단 탭바 + 시트 ── */
+.pb-ic{margin-right:4px;}
+.sheet-close{display:none;}
+@media (max-width:600px){
+  #panels{top:auto;bottom:0;left:0;right:0;max-width:none;flex-wrap:nowrap;justify-content:space-around;gap:0;
+    padding:4px 4px calc(4px + env(safe-area-inset-bottom));background:rgba(5,5,15,0.97);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:0.5px solid rgba(120,115,200,0.25);z-index:40;}
+  .panel-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    min-height:52px;padding:4px 0;background:none;border:none;border-radius:0;color:rgba(255,255,255,0.45);}
+  .panel-btn:hover{background:none;border:none;}
+  .panel-btn.active{background:none;border:none;color:#ccc9ff;}
+  .pb-ic{margin:0;font-size:17px;line-height:1;}
+  .panel-btn.active .pb-ic{filter:drop-shadow(0 0 6px rgba(127,119,221,0.8));}
+  .pb-lb{font-size:0;}
+  .pb-lb::before{content:attr(data-short);font-size:10px;}
+  .side-panel,#search-panel,#topic-panel{top:auto;bottom:60px;left:0;right:0;width:auto;min-width:0;max-width:none;
+    max-height:calc(100vh - 60px - 150px);max-height:calc(100dvh - 60px - 150px);z-index:35;
+    border:none;border-top:0.5px solid rgba(127,119,221,0.35);border-radius:16px 16px 0 0;
+    padding:0 16px 20px;background:rgba(8,8,24,0.98);box-shadow:0 -10px 36px rgba(0,0,0,0.6);}
+  .side-panel::before{content:'';display:block;position:sticky;top:0;z-index:1;width:36px;height:4px;border-radius:2px;
+    background:rgba(255,255,255,0.2);margin:0 auto;box-sizing:content-box;
+    border-top:10px solid rgba(8,8,24,0.98);border-bottom:10px solid rgba(8,8,24,0.98);}
+  .sheet-close{display:block;position:sticky;top:12px;float:right;margin:-12px -4px 0 8px;width:32px;height:32px;border-radius:16px;border:none;
+    background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.7);font-size:14px;cursor:pointer;z-index:2;}
+  .side-panel h4{font-size:12px;color:rgba(255,255,255,0.6);margin:2px 44px 12px 0;}
+  #filter-panel label{display:inline-flex;vertical-align:top;width:calc(50% - 4px);min-height:40px;margin:0;
+    font-size:13px;color:rgba(255,255,255,0.75);}
+  #filter-panel input{width:16px;height:16px;}
+  #filter-panel i{width:10px;height:10px;}
+  .path-btn,.q-btn,#topic-search-btn,#sp-search-btn,.sp-clear{min-height:40px;font-size:13px;}
+  #topic-query,#sp-input{font-size:16px;}
+  #search-panel .sp-help,#topic-desc{font-size:12px;}
+  #sp-results{max-height:none;}
+  #card{bottom:60px;max-height:calc(100dvh - 60px - 150px);z-index:36;}
+  #rel-legend{bottom:72px;}
+  #route-active-banner{bottom:72px;}
 }
 /* 모달이 화면보다 길면 위가 잘리지 않고 스크롤되도록 */
 .em-overlay,.ts-overlay{overflow-y:auto;}
@@ -485,14 +518,15 @@ canvas:active{cursor:grabbing;}
     <button class="rab-close" onclick="clearRouteMode()" title="항로 강조 해제">&#x2715;</button>
   </div>
   <div id="panels">
-    <button class="panel-btn" id="btn-filter" onclick="togglePanel('filter-panel','btn-filter')">&#x2261; &#xC0AC;&#xC870;</button>
-    <button class="panel-btn" id="btn-path"   onclick="togglePanel('path-panel','btn-path')">&#x1F5FA; &#xCD94;&#xCC9C; &#xD56D;&#xB85C;</button>
-    <button class="panel-btn" id="btn-q"      onclick="togglePanel('q-panel','btn-q')">? &#xD575;&#xC2EC; &#xC9C8;&#xBB38;</button>
-    <button class="panel-btn" id="btn-topic"  onclick="togglePanel('topic-panel','btn-topic')">&#x1F9ED; &#xC8FC;&#xC81C; &#xD56D;&#xB85C;</button>
-    <button class="panel-btn" id="btn-fx"     onclick="togglePanel('fx-panel','btn-fx')">&#x2736; &#xD6A8;&#xACFC;</button>
-    <button class="panel-btn" id="btn-search" onclick="togglePanel('search-panel','btn-search')">&#x1F50D; &#xC758;&#xBBF8; &#xAC80;&#xC0C9;</button>
+    <button class="panel-btn" id="btn-filter" aria-label="사조" onclick="togglePanel('filter-panel','btn-filter')"><span class="pb-ic" aria-hidden="true">&#x2261;</span><span class="pb-lb" data-short="사조">&#xC0AC;&#xC870;</span></button>
+    <button class="panel-btn" id="btn-path" aria-label="추천 항로" onclick="togglePanel('path-panel','btn-path')"><span class="pb-ic" aria-hidden="true">&#x1F5FA;</span><span class="pb-lb" data-short="추천">&#xCD94;&#xCC9C; &#xD56D;&#xB85C;</span></button>
+    <button class="panel-btn" id="btn-q" aria-label="핵심 질문" onclick="togglePanel('q-panel','btn-q')"><span class="pb-ic" aria-hidden="true">?</span><span class="pb-lb" data-short="질문">&#xD575;&#xC2EC; &#xC9C8;&#xBB38;</span></button>
+    <button class="panel-btn" id="btn-topic" aria-label="주제 항로" onclick="togglePanel('topic-panel','btn-topic')"><span class="pb-ic" aria-hidden="true">&#x1F9ED;</span><span class="pb-lb" data-short="주제">&#xC8FC;&#xC81C; &#xD56D;&#xB85C;</span></button>
+    <button class="panel-btn" id="btn-fx" aria-label="효과" onclick="togglePanel('fx-panel','btn-fx')"><span class="pb-ic" aria-hidden="true">&#x2736;</span><span class="pb-lb" data-short="효과">&#xD6A8;&#xACFC;</span></button>
+    <button class="panel-btn" id="btn-search" aria-label="의미 검색" onclick="togglePanel('search-panel','btn-search')"><span class="pb-ic" aria-hidden="true">&#x1F50D;</span><span class="pb-lb" data-short="검색">&#xC758;&#xBBF8; &#xAC80;&#xC0C9;</span></button>
   </div>
   <div class="side-panel" id="filter-panel">
+    <button class="sheet-close" onclick="closePanel()" aria-label="닫기">&#x2715;</button>
     <h4>&#xC0AC;&#xC870; &#xC120;&#xD0DD;</h4>
     <label><input type="checkbox" checked data-trad="presocratics"><i style="background:#B8985A"></i>소크라테스 이전 철학</label>
     <label><input type="checkbox" checked data-trad="ancient-greek"><i style="background:#D4B266"></i>고대 그리스 철학</label>
@@ -539,6 +573,7 @@ canvas:active{cursor:grabbing;}
     <label><input type="checkbox" checked data-trad="communitarianism"><i style="background:#6B4E71"></i>공동체주의</label>
   </div>
   <div class="side-panel" id="path-panel">
+    <button class="sheet-close" onclick="closePanel()" aria-label="닫기">&#x2715;</button>
     <h4>&#x1F4CD; &#xCD94;&#xCC9C; &#xD56D;&#xB85C;</h4>
     <button class="path-btn" data-path="A">&#x1F50D; 푸코로 가는 길</button>
       <button class="path-btn" data-path="B">&#x2696;&#xFE0F; 샌델로 가는 길</button>
@@ -549,6 +584,7 @@ canvas:active{cursor:grabbing;}
     <div id="path-nodes"></div>
   </div>
   <div class="side-panel" id="q-panel">
+    <button class="sheet-close" onclick="closePanel()" aria-label="닫기">&#x2715;</button>
     <h4>&#x1F4A1; &#xD575;&#xC2EC; &#xC9C8;&#xBB38;&#xC73C;&#xB85C; &#xD0D0;&#xC0C9;</h4>
     <div class="q-grid">
       <button class="q-btn" data-q="권력">권력</button>
@@ -563,6 +599,7 @@ canvas:active{cursor:grabbing;}
     <div id="q-desc"></div>
   </div>
   <div class="side-panel" id="fx-panel">
+    <button class="sheet-close" onclick="closePanel()" aria-label="닫기">&#x2715;</button>
     <h4>&#xC2DC;&#xAC01; &#xD6A8;&#xACFC;</h4>
     <label><input type="checkbox" id="intro-toggle"> &#x1F393; &#xC785;&#xBB38; &#xBAA8;&#xB4DC;</label>
     <p class="fx-desc" style="margin-top:-2px;">&#xD575;&#xC2EC; 67&#xBA85;&#xB9CC; &#xD45C;&#xC2DC; (&#xC601;&#xD5A5;&#xB825; 0.85+)</p>
@@ -574,6 +611,7 @@ canvas:active{cursor:grabbing;}
     <p class="fx-desc">&#xC2DC;&#xB300;&#xB97C; &#xB118;&#xB294; &#xC0AC;&#xC0C1;&#xC801; &#xC5F0;&#xACB0;</p>
   </div>
   <div class="side-panel" id="search-panel">
+    <button class="sheet-close" onclick="closePanel()" aria-label="닫기">&#x2715;</button>
     <h4>&#x1F50D; &#xC758;&#xBBF8; &#xAC80;&#xC0C9;</h4>
     <div class="sp-mode-toggle">
       <label><input type="radio" name="sp-mode" value="keyword" checked onchange="setSearchMode('keyword')"><span>키워드 (즉시)</span></label>
@@ -631,6 +669,7 @@ canvas:active{cursor:grabbing;}
   </div>
   <!-- 주제 항로 패널 -->
   <div class="side-panel" id="topic-panel">
+    <button class="sheet-close" onclick="closePanel()" aria-label="닫기">&#x2715;</button>
     <div id="topic-input-wrap">
       <h4>철학적 문제의식으로 항로 찾기</h4>
       <p id="topic-desc">철학자를 몰라도 괜찮습니다. 문제의식을 입력하면 미리 설계된 철학 항로와 연결됩니다.</p>
@@ -4178,8 +4217,14 @@ function togglePanel(id, btnId) {
   document.querySelectorAll('.panel-btn').forEach(b => b.classList.remove('active'));
   if (openPanel===id) { el.style.display='none'; openPanel=null; return; }
   if (openPanel) document.getElementById(openPanel).style.display='none';
+  if (isMobile() && document.getElementById('card').style.display==='block') cc(); // 모바일: 카드와 시트는 하나만
   el.style.display='block'; openPanel=id;
   if (btnId) document.getElementById(btnId).classList.add('active');
+}
+function closePanel() {
+  if (!openPanel) return;
+  document.getElementById(openPanel).style.display='none'; openPanel=null;
+  document.querySelectorAll('.panel-btn').forEach(b => b.classList.remove('active'));
 }
 
 // ── 추천 항로 ──
@@ -5184,6 +5229,7 @@ canvas.addEventListener('touchend', e => {
 function isMobile() { return window.innerWidth <= 600; }
 
 function showCard(p) {
+  closePanel(); // 모바일: 카드와 시트는 하나만
   sel=p; draw();
   document.getElementById('cn').textContent=p.name;
   document.getElementById('cl').textContent=p.life+' · 영향력 '+Math.round(p.inf*100)+'% · 입문 중요도 '+Math.round(p.beg*100)+'%';
