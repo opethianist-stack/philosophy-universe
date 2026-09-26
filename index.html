@@ -4988,7 +4988,7 @@ function clearDeepSearch() {
 
 // ── 검색 모드 전환 (키워드 / 의미) ──
 let searchMode = 'keyword';
-// 의미(AI) 검색 공개 스위치: embeddings.json 배포 + Vercel OPENAI_API_KEY 설정 후 true로 변경
+// 의미(AI) 검색 공개 스위치: embeddings.json 배포 + Vercel GEMINI_API_KEY 설정 후 true로 변경
 const SEMANTIC_ENABLED = false;
 if (!SEMANTIC_ENABLED) {
   const toggle = document.querySelector('.sp-mode-toggle');
@@ -4999,7 +4999,7 @@ function setSearchMode(mode) {
   const help = document.getElementById('sp-help-text');
   const inp = document.getElementById('sp-input');
   if (mode === 'semantic') {
-    if (help) help.textContent = '자연어 질문을 입력하세요. AI가 의미를 이해해 관련된 학자·사조·항로를 찾습니다. (외부 API 호출, 결과 1~3초 소요)';
+    if (help) help.textContent = '자연어 질문을 입력하세요. AI가 의미를 이해해 관련된 학자·사조·항로를 찾습니다. 입력한 내용은 의미 분석을 위해 Google Gemini API로 전송되며, Google 서비스 개선에 활용될 수 있습니다. 개인정보는 입력하지 마세요.';
     if (inp) inp.placeholder = '예: 왜 인간은 자유에서 도망치고 싶어할까? / 사랑의 본질은 무엇인가?';
   } else {
     if (help) help.textContent = '고민·질문·키워드를 자유롭게 입력하세요. 학자·사조·항로에서 관련된 것을 찾습니다.';
@@ -5044,6 +5044,14 @@ function cosineSimilarity(a, b) {
   return dot / (Math.sqrt(normA) * Math.sqrt(normB));
 }
 
+// AI 검색을 쓸 수 없을 때(한도 초과·장애·인덱스 없음) 키워드 검색 결과로 대신 보여줌
+function semanticFallback(reason) {
+  console.warn('[Semantic] fallback to keyword:', reason);
+  _runDeepSearch_keyword();
+  const stats = document.getElementById('sp-stats');
+  stats.textContent = 'AI 검색을 지금 쓸 수 없어 키워드 검색 결과를 보여드려요 · ' + stats.textContent;
+}
+
 async function runSemanticSearch(query) {
   const stats = document.getElementById('sp-stats');
   const results = document.getElementById('sp-results');
@@ -5052,10 +5060,7 @@ async function runSemanticSearch(query) {
   stats.textContent = '⏳ 임베딩 인덱스 불러오는 중...';
   results.innerHTML = '';
   const idx = await loadSemanticIndex();
-  if (!idx) {
-    stats.textContent = '✗ 인덱스 로드 실패: ' + (SEMANTIC_LOAD_ERROR || 'unknown');
-    return;
-  }
+  if (!idx) return semanticFallback('index: ' + (SEMANTIC_LOAD_ERROR || 'unknown'));
 
   // 2. 백엔드에 쿼리 임베딩 요청
   stats.textContent = '⏳ AI에 의미 분석 요청 중...';
@@ -5067,19 +5072,14 @@ async function runSemanticSearch(query) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query })
     });
-    const data = await resp.json();
-    if (!resp.ok) {
-      stats.textContent = '✗ 백엔드 에러: ' + (data.error || resp.status);
-      return;
-    }
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok) return semanticFallback('backend ' + resp.status + ': ' + (data.error || ''));
     queryEmb = data.embedding;
-    if (!queryEmb || !queryEmb.length) {
-      stats.textContent = '✗ 임베딩 응답이 비어있음';
-      return;
+    if (!queryEmb || queryEmb.length !== idx.dimensions) {
+      return semanticFallback('embedding length ' + (queryEmb ? queryEmb.length : 0) + ' ≠ ' + idx.dimensions);
     }
   } catch (e) {
-    stats.textContent = '✗ 네트워크 에러: ' + e.message;
-    return;
+    return semanticFallback('network: ' + e.message);
   }
 
   // 3. 코사인 유사도 계산

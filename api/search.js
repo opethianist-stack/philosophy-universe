@@ -1,6 +1,8 @@
 // POST /api/search  { query } → { embedding: number[1536] }
 // 쿼리 임베딩만 프록시한다. 유사도 계산은 클라이언트(index.html)에서 수행.
-const MODEL = 'text-embedding-3-small';
+// Google Gemini API 무료 등급 사용: 입력 내용이 Google 서비스 개선에 활용될 수 있음(클라이언트에 안내 문구 표시).
+const MODEL = 'gemini-embedding-001';
+const DIMENSIONS = 1536;          // embeddings.json과 같아야 함
 const MAX_QUERY_CHARS = 500;
 const DAILY_LIMIT_PER_IP = 50;
 
@@ -30,7 +32,7 @@ export default async function handler(req, res) {
     res.setHeader('Allow', 'POST');
     return res.status(405).json({ error: 'POST only' });
   }
-  const key = process.env.OPENAI_API_KEY;
+  const key = process.env.GEMINI_API_KEY;
   if (!key) return res.status(500).json({ error: 'server not configured' });
 
   let body = req.body;
@@ -43,23 +45,37 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: `검색어는 ${MAX_QUERY_CHARS}자 이내로 입력하세요` });
   }
   if (overLimit(clientIp(req))) {
-    return res.status(429).json({ error: '오늘의 의미 검색 한도를 초과했습니다. 키워드 검색을 이용해주세요' });
+    return res.status(429).json({ error: '오늘의 AI 검색 한도를 초과했습니다' });
   }
 
   try {
-    const resp = await fetch('https://api.openai.com/v1/embeddings', {
+    const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:embedContent`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key },
-      body: JSON.stringify({ model: MODEL, input: query }),
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+      body: JSON.stringify({
+        content: { parts: [{ text: query }] },
+        taskType: 'RETRIEVAL_QUERY',
+        outputDimensionality: DIMENSIONS,
+      }),
     });
+    if (resp.status === 429) {
+      // 무료 등급 프로젝트 한도(분당/일당) 초과: 사이트 전체 공통
+      console.warn('Gemini quota exceeded', await resp.text());
+      return res.status(429).json({ error: 'AI 검색 사용량이 많아 잠시 쓸 수 없습니다' });
+    }
     if (!resp.ok) {
-      console.error('OpenAI error', resp.status, await resp.text());
+      console.error('Gemini error', resp.status, await resp.text());
       return res.status(502).json({ error: '임베딩 서비스 오류 (' + resp.status + ')' });
     }
     const data = await resp.json();
-    return res.status(200).json({ embedding: data.data[0].embedding });
+    const values = data?.embedding?.values;
+    if (!Array.isArray(values) || values.length !== DIMENSIONS) {
+      console.error('Unexpected Gemini response', JSON.stringify(data).slice(0, 300));
+      return res.status(502).json({ error: '임베딩 응답 형식 오류' });
+    }
+    return res.status(200).json({ embedding: values });
   } catch (e) {
-    console.error('OpenAI request failed', e);
+    console.error('Gemini request failed', e);
     return res.status(502).json({ error: '임베딩 서비스에 연결할 수 없습니다' });
   }
 }

@@ -139,7 +139,7 @@ HTML `#legend`는 CSS로 숨겨져 있고(`display:none`, 필터 패널과 중�
 |---|---|---|
 | 0 | 데이터 정비: 213명 전원 EXTRA(hook/problem/metaphor) 완비 | ✅ 완료 |
 | 1 | 클라이언트 TF-IDF 키워드 검색 + "의미 검색" 사이드 패널 | ✅ 완료 (배포본 포함) |
-| **2** | **OpenAI 임베딩 기반 의미 검색 (검색 = RAG의 R)** | 🔶 클라이언트 배포됨, **백엔드·`embeddings.json` 미배포** ← 현재 위치 |
+| **2** | **Gemini 임베딩 기반 의미 검색 (검색 = RAG의 R)** | 🔶 클라이언트·백엔드 배포됨(비활성), **`embeddings.json`·API 키 미준비** ← 현재 위치 |
 | 3 | LLM 응답 생성 (사용자 고민에 가이드 답변 + 항로 추천, RAG의 G) | 계획만 존재 |
 | 4 | 운영·개선 (사용 통계, 캐싱, 응답 품질 평가) | 계획만 존재 |
 
@@ -147,12 +147,18 @@ HTML `#legend`는 CSS로 숨겨져 있고(`display:none`, 필터 패널과 중�
 
 ### Phase 2 확정 아키텍처 결정
 - **백엔드**: Vercel Functions (Cloudflare Workers 검토 후 기각. 기존 Vercel/GitHub 계정 활용)
-- **임베딩 모델**: OpenAI `text-embedding-3-small`, **1536차원 그대로** (차원 축소 안 함)
+- **임베딩 모델**: Google Gemini `gemini-embedding-001`, **1536차원**(기본 3072에서 `outputDimensionality`로 축소, MRL 방식). 문서는 `RETRIEVAL_DOCUMENT`(+title), 검색어는 `RETRIEVAL_QUERY` 태스크 타입
+  - 제공자 변경 이력: 처음엔 OpenAI `text-embedding-3-small`로 결정했으나, 키 발급에 결제수단 등록이 필요해 진행이 막혀 무료 등급이 있는 Gemini로 변경 (2026-09). Anthropic은 자체 임베딩 모델이 없고 Voyage AI를 권장하므로 제외. Claude는 Phase 3(응답 생성) 후보
+  - 문서와 검색어 임베딩은 반드시 같은 모델·차원이어야 함. 모델을 바꾸면 `embeddings.json` 재생성 필수
+- **요금 등급**: Gemini API **무료 등급** (결제가 연결되지 않은 GCP 프로젝트의 키)
+  - 대가 ①: 무료 등급 입력(검색어)은 Google 서비스 개선에 활용될 수 있고 사람이 검토할 수 있음 → 의미(AI) 모드 안내 문구에 "Google Gemini API로 전송, 개인정보 입력 금지" 표시
+  - 대가 ②: 프로젝트 단위 호출 한도(외부 정리 자료 기준 대략 분당 100회·3만 토큰, 일 1,000회 수준. Google이 공식 표를 더 이상 공개하지 않으므로 AI Studio에서 확인). 사이트 전체가 공유 → 초과 시 클라이언트가 **키워드 검색으로 자동 전환**
+  - EEA·영국·스위스 사용자 대상 서비스는 약관상 유료 등급 필요 (현재 대상은 한국 입문자)
+  - 전환: 방문자가 늘거나 검색어 활용이 문제가 되면 해당 GCP 프로젝트에 결제만 연결하면 유료 등급 (코드 변경 없음, 단가 $0.15/100만 토큰 수준)
 - **임베딩 저장**: 정적 파일 `embeddings.json`, 클라이언트가 **검색 시작 시 lazy load**. Vercel KV 기각
-  - 용량: 1.7MB는 float32 바이너리 기준. 클라이언트가 JSON 숫자 배열을 기대하므로 소수점 6자리 반올림 시 약 4MB(전송 시 gzip/brotli 압축)
+  - 용량: 소수점 6자리 반올림 JSON 약 4MB(전송 시 gzip/brotli 압축)
 - **검색 연산 분담**: 백엔드는 쿼리 임베딩 생성 프록시만 담당. **코사인 유사도 계산은 클라이언트**에서 수행
-- **API 키 관리**: 운영자 키(Vercel 환경변수 `OPENAI_API_KEY`) + IP 기반 일일 호출 한도. 저장소가 없어 한도는 함수 인스턴스 메모리 기준(인스턴스 재시작·분산 시 초기화되는 best-effort). 실질적 비용 상한은 OpenAI 대시보드의 월 사용 한도로 설정. BYOK는 공개 확장 시점에 재검토
-- **비용 전망**: 문서 임베딩 1회 ~$0.002, 쿼리 임베딩 월 ~$0.015 수준 (일 100명 × 5회 가정)
+- **API 키 관리**: 운영자 키(Vercel 환경변수 `GEMINI_API_KEY`) + IP당 일 50회 한도. 저장소가 없어 IP 한도는 함수 인스턴스 메모리 기준(best-effort). BYOK는 공개 확장 시점에 재검토
 
 ---
 
@@ -167,9 +173,9 @@ philosophy-universe/
 ├── api/
 │   └── search.js              ← Vercel Function: POST {query} → {embedding} + IP 한도
 ├── scripts/
-│   └── generate_embeddings.js ← index.html에서 문서 추출 → OpenAI 임베딩 → embeddings.json
+│   └── generate_embeddings.js ← index.html에서 문서 추출 → Gemini 임베딩(20개씩, 분당 토큰 한도에 맞춰 대기) → embeddings.json
 ├── package.json
-├── .env.example               ← OPENAI_API_KEY 템플릿
+├── .env.example               ← GEMINI_API_KEY 템플릿
 ├── .gitignore                 ← .env, node_modules 제외
 └── .vercelignore              ← scripts/, 문서, .env 배포 제외
 ```
@@ -177,12 +183,13 @@ philosophy-universe/
 ### 클라이언트 ↔ 백엔드 계약 (`index.html`에 이미 구현된 쪽 기준)
 - 요청: `POST /api/search`, body `{ "query": "<문자열>" }`
 - 성공 응답: `{ "embedding": number[1536] }`
-- 실패 응답: HTTP 4xx/5xx + `{ "error": "<메시지>" }` (클라이언트가 `data.error`를 그대로 표시)
-- `embeddings.json`: `{ model, dimensions, count, docs: [{ type, id, title, meta, snippet, embedding }] }`, `type`은 `philosopher` / `tradition` / `topic`
+- 실패 응답: HTTP 4xx/5xx + `{ "error": "<메시지>" }`. 429 = IP 일 한도 또는 Gemini 프로젝트 한도 초과
+- 클라이언트는 실패(백엔드 오류·네트워크·`embeddings.json` 없음·차원 불일치) 시 `semanticFallback()`으로 **키워드 검색 결과를 대신 표시**하고 "AI 검색을 지금 쓸 수 없어…" 안내
+- `embeddings.json`: `{ provider, model, dimensions, count, generated, docs: [{ type, id, title, meta, snippet, embedding }] }`, `type`은 `philosopher` / `tradition` / `topic`
 
 ### 클라이언트 측 검색 흐름
 1. 의미(AI) 모드에서 검색 → `loadSemanticIndex()`가 `embeddings.json` 로드(1회, 메모리 캐시)
-2. `fetch('/api/search')` → IP 한도 확인 → OpenAI 쿼리 임베딩 → 1536차원 벡터 반환
+2. `fetch('/api/search')` → IP 한도 확인 → Gemini 쿼리 임베딩(`RETRIEVAL_QUERY`) → 1536차원 벡터 반환
 3. 276개 문서 벡터와 코사인 유사도 계산 → 상위 15개를 기존 검색 패널 카드 UI로 표시
 
 ---
@@ -190,14 +197,16 @@ philosophy-universe/
 ## 8. Phase 2 작업 순서
 
 ### 사용자가 직접 하는 일
-1. OpenAI API 키 발급 (platform.openai.com, 결제수단 등록 필요). 월 사용 한도 설정 권장
-2. 로컬 `.env`에 `OPENAI_API_KEY=...` 입력 (절대 커밋 금지)
-3. Vercel 대시보드 → philosophy-universe → Settings → Environment Variables에 `OPENAI_API_KEY` 등록 (Production + Preview)
+1. Google AI Studio(aistudio.google.com)에서 Gemini API 키 발급
+   - **결제(billing)가 연결되지 않은 GCP 프로젝트**를 선택하거나 새로 만들 것. 결제가 연결된 프로젝트(예: Drive API용으로 결제를 켠 프로젝트)의 키는 유료 등급으로 과금됨
+   - AI Studio에서 해당 프로젝트의 `gemini-embedding-001` 한도 확인
+2. 로컬 `.env`에 `GEMINI_API_KEY=...` 입력 (절대 커밋 금지)
+3. Vercel 대시보드 → philosophy-universe → Settings → Environment Variables에 `GEMINI_API_KEY` 등록 (Production + Preview)
 
 ### Claude Code가 하는 일
 1. ~~저장소 상태 파악~~ (완료: 배포 패키지 부재, `index.html`은 Phase 2 클라이언트까지 포함)
 2. ~~`api/search.js`, `scripts/generate_embeddings.js`, `package.json` 등 작성~~ (완료)
-3. `node --env-file=.env scripts/generate_embeddings.js` 실행 → `embeddings.json` 생성·검증 (276 docs, 1536차원)
+3. `npm run embed` 실행 → `embeddings.json` 생성·검증 (276 docs, 1536차원). 무료 등급 속도 조절로 4~5분 소요, 문서 276개가 일일 요청 한도 일부를 사용할 수 있음
 4. `vercel dev` 또는 Preview 배포로 `/api/search` 동작 확인
 5. `index.html`의 `SEMANTIC_ENABLED`를 `true`로 변경 (false인 동안 검색 패널의 키워드/의미(AI) 모드 선택이 숨겨지고 키워드 검색만 노출)
 6. `main` 반영 → 자동 배포
@@ -207,13 +216,14 @@ philosophy-universe/
 
 | 증상 | 원인 | 해결 |
 |---|---|---|
-| `generate_embeddings.js` 401 | 잘못된 API 키 | `.env` 점검 |
-| `generate_embeddings.js` 429 | 결제수단 미등록 / 한도 초과 | OpenAI Billing 확인 |
+| `generate_embeddings.js` 400/403 | 잘못된 API 키, 또는 프로젝트에 Generative Language API 비활성 | `.env` 점검, AI Studio에서 키 재발급 |
+| `generate_embeddings.js` 429 반복 | 무료 등급 분당/일당 한도 초과 (스크립트가 `retryDelay`만큼 자동 대기·최대 5회 재시도) | 잠시 후 재실행, 일 한도면 다음 날 |
+| AI 검색이 계속 키워드 결과로 바뀜 | Gemini 프로젝트 한도 초과, IP 한도 초과, 또는 백엔드 오류 | 브라우저 콘솔 `[Semantic] fallback` 사유, Vercel Functions 로그 확인 |
 | 사이트는 뜨는데 검색만 안 됨 | API 함수 미배포 or 환경변수 누락 | Vercel → Functions 탭에서 `api/search` 확인, 환경변수 추가 후 재배포 |
-| "인덱스 로드 실패: embeddings.json not found" | `embeddings.json` 미배포 | 저장소 루트에 파일 존재 확인 후 재배포 |
-| 백엔드 에러 "server not configured" | `OPENAI_API_KEY` 미설정 | Vercel 환경변수 등록 후 재배포 |
+| 키워드 결과로 바뀌며 콘솔에 `index: embeddings.json not found` | `embeddings.json` 미배포 | 저장소 루트에 파일 존재 확인 후 재배포 |
+| 백엔드 에러 "server not configured" | `GEMINI_API_KEY` 미설정 | Vercel 환경변수 등록 후 재배포 |
 
-**현재 라이브 상태**: `SEMANTIC_ENABLED = false`로 의미(AI) 모드 선택을 숨김. `api/search.js`는 배포되어 있으나 `OPENAI_API_KEY`가 없어 호출 시 500("server not configured"). 사용자가 신호를 주기 전까지 활성화하지 않음.
+**현재 라이브 상태**: `SEMANTIC_ENABLED = false`로 의미(AI) 모드 선택을 숨김. `api/search.js`(Gemini)는 배포되어 있으나 `GEMINI_API_KEY`가 없어 호출 시 500("server not configured"). 사용자가 신호를 주기 전까지 활성화하지 않음.
 
 ---
 
